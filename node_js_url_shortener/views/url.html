@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>url inps</title>
+</head>
+
+<body>
+    <form>
+        <label for="url" >Input your url</label>
+        <input type="text" name="url" id="url" required>
+        <button id="confirm">confirm</button>
+    </form>
+    <div id="toAddText"></div>
+
+    <script>
+        const button = document.getElementById("confirm");
+        const resultText = document.createElement("p");
+        button.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            const textForm = document.getElementById("url");
+            const url = textForm.value;
+            //post the url
+            fetch('/url/'+url, {
+                method: "POST",
+                body: url
+            })
+            .then(function(response){
+                // console.log(response);
+                response.json().then(resp => {
+                    console.log(window.location)
+                    const node = document.createTextNode("use this /" + resp.hashGenerated);
+                    resultText.appendChild(node);
+                    const divFound = document.getElementById("toAddText");
+                    const newDiv = document.createElement("div");
+                    newDiv.appendChild(resultText);
+                    divFound.appendChild(newDiv);
+                })
+            })
+            .then(function(data){
+                // resultText.innerHTML = data.body;
+            });
+        });
+
+    </script>
+</body>
+
+</html>
