@@ -9,11 +9,9 @@
 </head>
 
 <body>
-    <form>
-        <label for="url" >Input your url</label>
-        <input type="text" name="url" id="url" required>
-        <button id="confirm">confirm</button>
-    </form>
+    <label for="url" >Input your url</label>
+    <input type="text" name="url" id="url" required>
+    <button id="confirm">confirm</button>
     <div id="toAddText"></div>
 
     <script>
@@ -22,11 +20,15 @@
         button.addEventListener('click', (ev) => {
             ev.preventDefault();
             const textForm = document.getElementById("url");
-            const url = textForm.value;
+            const inpUrl = textForm.value;
+            console.log({inpUrl})
             //post the url
-            fetch('/url/'+url, {
+            fetch('/urls/', {
                 method: "POST",
-                body: url
+                body: JSON.stringify({ "url": inpUrl}),
+                headers: {
+                    "Content-Type": "application/json"
+                },
             })
             .then(function(response){
                 // console.log(response);
