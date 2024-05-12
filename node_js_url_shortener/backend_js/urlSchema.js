@@ -7,7 +7,7 @@ const urlSchema = new mongoose.Schema({
 const Url = mongoose.model("Url", urlSchema);
 
 const createAndSaveUrlInstance = async function createAndSaveUrlInstance(hashToSave, urlToSave){
-    console.log(urlToSave);
+    console.log("this is url to save",urlToSave);
     const url = new Url({hash: hashToSave, url: urlToSave});
     console.log(url);
     url.save();

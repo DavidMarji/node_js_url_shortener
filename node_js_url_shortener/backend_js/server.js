@@ -33,8 +33,11 @@ app.get('/urls', (req, res) => {
 
 app.post('/urls/', (req, res) => {
     const originalHash = hashUrl((req.body.url).toLowerCase());
-    let postedUrl = originalHash.substring(0, Math.floor(Math.random() * Math.floor(req.body.url.length/2)) + 1);
+    let postedUrl = originalHash.length >= 5 
+                    ? originalHash.substring(0, 5) 
+                    : originalHash.substring(0, originalHash.length/2);
 
+    console.log("this is the posted url assignment " + postedUrl);
 
     schema.findUrlInstanceByHash(postedUrl).then(async data => {
         //checking if hash already exists
@@ -42,7 +45,7 @@ app.post('/urls/', (req, res) => {
             
             //find a new valid and short hash
             let validHash = await findValidHash(originalHash, postedUrl, req.body.url, 0);
-
+            console.log("this is valid hash", validHash);
             //url wasnt already stored and a new hash was found
             if(!validHash.foundBefore){
                 await schema.createAndSaveUrlInstance(validHash, req.body.url);
@@ -52,6 +55,7 @@ app.post('/urls/', (req, res) => {
         }
         else{
             // hash is unique
+            console.log(postedUrl);
             await schema.createAndSaveUrlInstance(postedUrl, req.body.url);
             res.send({hashGenerated : postedUrl});
         } 
@@ -81,14 +85,13 @@ async function findValidHash(originalHash, hash, urlToLookFor, i){
     let ecnounteredBefore = false;
     while(!temp){
         await schema.findUrlInstanceByHash(hash).then(data => {
-            let trialLength = Math.floor(Math.random() * Math.min(Math.floor(urlToLookFor.length/2), originalHash.length) + 1);
-            if(trialLength < originalHash.length){
-                hash = originalHash.substring(i, trialLength);
+            if(5+i < originalHash.length){
+                hash = originalHash.substring(i, i+5);
             }
             else{
                 originalHash = hashUrl(hash);
                 i = 0;
-                hash = originalHash.substring(i, Math.floor(trialLength/2));
+                hash = originalHash.substring(i, i+5);
             }
             if(data.length === 0){
                 // url has not been stored before and found a new valid hash
