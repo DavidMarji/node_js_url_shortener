@@ -35,7 +35,7 @@ app.post('/urls/', (req, res) => {
     const originalHash = hashUrl((req.body.url).toLowerCase());
     let postedUrl = originalHash.length >= 5 
                     ? originalHash.substring(0, 5) 
-                    : originalHash.substring(0, originalHash.length/2);
+                    : originalHash.substring(0, (req.body.url).length/2);
 
     console.log("this is the posted url assignment " + postedUrl);
 
