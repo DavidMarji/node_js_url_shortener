@@ -7,9 +7,7 @@ const urlSchema = new mongoose.Schema({
 const Url = mongoose.model("Url", urlSchema);
 
 const createAndSaveUrlInstance = async function createAndSaveUrlInstance(hashToSave, urlToSave){
-    console.log("this is url to save",urlToSave);
     const url = new Url({hash: hashToSave, url: urlToSave});
-    console.log(url);
     url.save();
 }
 
@@ -21,16 +19,18 @@ const main = async function main() {
 
 main();
 
-const findUrlInstanceByHash = async function findUrlInstanceByHash(hashtoLookup){
-    const urlFound = await Url.find({hash : hashtoLookup});
-    console.log("this is url found in findurlinstancbyhash " + urlFound);
+const findUrlInstanceByHash = async function findUrlInstanceByHash(hashToLookup){
+    const urlFound = await Url.find({hash : hashToLookup});
     return urlFound;
+}
+
+const updateUrlInstance = async function updateUrlInstance(hashToLookup, newUrl){
+    await Url.updateOne({hash : hashToLookup}, {hash : hashToLookup, url : newUrl});
 }
 
 const containsUrl = async function containsUrl(urlToLookup){
     const urlFound = await Url.find({url : urlToLookup});
-    console.log("this is containsUrl " + urlFound);
     return urlFound;
 }
 
-module.exports = {createAndSaveUrlInstance, findUrlInstanceByHash, containsUrl};
+module.exports = {createAndSaveUrlInstance, findUrlInstanceByHash, containsUrl, updateUrlInstance};

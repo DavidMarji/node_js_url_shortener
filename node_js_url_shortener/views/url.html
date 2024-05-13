@@ -8,20 +8,22 @@
     <title>url inps</title>
 </head>
 
-<body>
+<body id="body">
     <label for="url" >Input your url</label>
     <input type="text" name="url" id="url" required>
-    <button id="confirm">confirm</button>
+    <button id="post">post</button>
+    <button id="put">put</button>
+    <input type="text" name="hash" id="hash">
     <div id="toAddText"></div>
 
     <script>
-        const button = document.getElementById("confirm");
-        const resultText = document.createElement("p");
-        button.addEventListener('click', (ev) => {
+        const postButton = document.getElementById("post");
+
+        postButton.addEventListener('click', (ev) => {
             ev.preventDefault();
+            const resultText = document.createElement("p");
             const textForm = document.getElementById("url");
-            const inpUrl = textForm.value;
-            console.log({inpUrl})
+            const inpUrl = textForm.value; 
             //post the url
             fetch('/urls/', {
                 method: "POST",
@@ -31,9 +33,7 @@
                 },
             })
             .then(function(response){
-                // console.log(response);
                 response.json().then(resp => {
-                    console.log(window.location)
                     const node = document.createTextNode("use this /" + resp.hashGenerated);
                     resultText.appendChild(node);
                     const divFound = document.getElementById("toAddText");
@@ -47,6 +47,35 @@
             });
         });
 
+
+        const putButton = document.getElementById("put");
+        putButton.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            const resultText = document.createElement("p");
+            const textForm = document.getElementById("url");
+            const inpUrl = textForm.value; 
+            const hashForm = document.getElementById("hash");
+            const inpHash = hashForm.value;
+            //put the url
+            fetch('/urls/'+inpHash, {
+                method: "PUT",
+                body: JSON.stringify({ "url": inpUrl}),
+                headers: {
+                    "Content-Type": "application/json"
+                },
+            })
+            .then(function(response){
+                const node = document.createTextNode("updated successfuly");
+                resultText.appendChild(node);
+                const body = document.getElementById("body");
+                const newDiv = document.createElement("div");
+                newDiv.appendChild(resultText);
+                body.appendChild(newDiv);
+            })
+            .then(function(data){
+                // resultText.innerHTML = data.body;
+            });
+        });
     </script>
 </body>
 

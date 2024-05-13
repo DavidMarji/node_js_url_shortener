@@ -21,8 +21,12 @@ const getUrl = async function getUrl(hash){
 }
 
 const postUrl = async function postUrl(hash, url) {
-    await client.flushDb();
     await client.set(hash, url);
 }
 
-module.exports = {postUrl, getUrl};
+const updateUrl = async function updateUrl(hash, url){
+    await client.del(hash);
+    await client.set(hash, url);
+}
+
+module.exports = {postUrl, getUrl, updateUrl};

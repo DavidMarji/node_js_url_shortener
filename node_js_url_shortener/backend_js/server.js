@@ -36,15 +36,12 @@ app.post('/urls/', async (req, res) => {
                     ? originalHash.substring(0, 5) 
                     : originalHash.substring(0, (req.body.url).length/2);
 
-    console.log("this is the posted Hash assignment " + postedHash);
-
     schema.findUrlInstanceByHash(postedHash).then(async data => {
         //checking if hash already exists
         if(data !== undefined && data.length > 0){
             
             //find a new valid and short hash
             let validHash = await findValidHash(originalHash, postedHash, req.body.url, 0);
-            console.log("this is valid hash", validHash);
             //url wasnt already stored and a new hash was found
             if(!validHash.foundBefore){
                 await schema.createAndSaveUrlInstance(validHash.validHash, req.body.url);
@@ -55,12 +52,31 @@ app.post('/urls/', async (req, res) => {
         }
         else{
             // hash is unique
-            console.log(postedHash);
             await schema.createAndSaveUrlInstance(postedHash, req.body.url);
             await redis.postUrl(postedHash, req.body.url);
             res.send({hashGenerated : postedHash});
         } 
     });
+});
+
+app.put('/urls/:hash', (req, res) => {
+    const newUrl = (req.body.url).toLowerCase();
+
+   (async function(){
+        await schema.findUrlInstanceByHash(req.params.hash).then(async data => {
+            if(data[0] !== undefined && data.length > 0) {
+                await schema.updateUrlInstance(req.params.hash, req.body.url).then((success) => {
+                    console.log("updated url in mongo");
+                });
+                await redis.updateUrl(req.params.hash, req.body.url).then(() => {
+                    console.log("updated redis cache");
+                })
+                res.sendStatus(200);
+                return;
+            }
+            res.sendStatus(404);
+        })
+    })();
 });
 
 app.get('/favicon.ico', (req, res) => {
@@ -71,21 +87,16 @@ app.get('/urls/:hash', (req, res) => {
     let cacheData = null;
     (async () => {
         await redis.getUrl(req.params.hash).then(async data => {
-            console.log(data);
             if(data !== null){
                 cacheData = data;
-                console.log("inside redis");
-                console.log(data.length >= 8 && data.substring(0, 8) === "https://" ? data : "https://"+data);
                 res.redirect(data.length >= 8 && data.substring(0, 8) === "https://" ? data : "https://"+data);
                 return;
             }
         });
-        console.log("this is cacheData", cacheData);
     
         if(cacheData) return;
     
         await schema.findUrlInstanceByHash(req.params.hash).then(async data => {
-            console.log("this is data " + data);
             if(data !== undefined && data.length > 0){
                 res.redirect(data[0].url.length >= 8 && data[0].url.substring(0, 8) === "https://" ? data[0].url : "https://"+data[0].url);
             }
