@@ -20,7 +20,7 @@ const main = async function main() {
 main();
 
 const findUrlInstanceByHash = async function findUrlInstanceByHash(hashToLookup){
-    const urlFound = await Url.find({hash : hashToLookup});
+    let urlFound = await Url.find({hash : hashToLookup});
     return urlFound;
 }
 
