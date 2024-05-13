@@ -1,11 +1,10 @@
 const path = require('path');
 const express = require('express');
 const crypto = require('crypto');
-const SHA256 = require("crypto-js/sha256");
 const app = express();
-const router = express.Router();
-const schema = require("./urlSchema.js");
+const schema = require('./urlSchema.js');
 const bodyParser = require('body-parser');
+const redis = require('./redis.js')
 
 function hashUrl(url) {
 	const hash = crypto.createHash('sha256');
@@ -31,33 +30,35 @@ app.get('/urls', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'views', 'url.html'));
 })
 
-app.post('/urls/', (req, res) => {
+app.post('/urls/', async (req, res) => {
     const originalHash = hashUrl((req.body.url).toLowerCase());
-    let postedUrl = originalHash.length >= 5 
+    let postedHash = originalHash.length >= 5 
                     ? originalHash.substring(0, 5) 
                     : originalHash.substring(0, (req.body.url).length/2);
 
-    console.log("this is the posted url assignment " + postedUrl);
+    console.log("this is the posted Hash assignment " + postedHash);
 
-    schema.findUrlInstanceByHash(postedUrl).then(async data => {
+    schema.findUrlInstanceByHash(postedHash).then(async data => {
         //checking if hash already exists
         if(data !== undefined && data.length > 0){
             
             //find a new valid and short hash
-            let validHash = await findValidHash(originalHash, postedUrl, req.body.url, 0);
+            let validHash = await findValidHash(originalHash, postedHash, req.body.url, 0);
             console.log("this is valid hash", validHash);
             //url wasnt already stored and a new hash was found
             if(!validHash.foundBefore){
-                await schema.createAndSaveUrlInstance(validHash, req.body.url);
+                await schema.createAndSaveUrlInstance(validHash.validHash, req.body.url);
             }
+            await redis.postUrl(validHash.validHash, req.body.url);
             res.send({hashGenerated : validHash.validHash});
             return;
         }
         else{
             // hash is unique
-            console.log(postedUrl);
-            await schema.createAndSaveUrlInstance(postedUrl, req.body.url);
-            res.send({hashGenerated : postedUrl});
+            console.log(postedHash);
+            await schema.createAndSaveUrlInstance(postedHash, req.body.url);
+            await redis.postUrl(postedHash, req.body.url);
+            res.send({hashGenerated : postedHash});
         } 
     });
 });
@@ -67,16 +68,32 @@ app.get('/favicon.ico', (req, res) => {
 });
 
 app.get('/urls/:hash', (req, res) => {
-    schema.findUrlInstanceByHash(req.params.hash).then(async data => {
-        console.log("this is data " + data);
-        if(data !== undefined && data.length > 0){
-            res.redirect(data[0].url.length >= 8 && data[0].url.substring(0, 8) === "https://" ? data[0].url : "https://"+data[0].url);
-            return;
-        }
-        else{
-            res.statusCode(404);
-        }
-    });
+    let cacheData = null;
+    (async () => {
+        await redis.getUrl(req.params.hash).then(async data => {
+            console.log(data);
+            if(data !== null){
+                cacheData = data;
+                console.log("inside redis");
+                console.log(data.length >= 8 && data.substring(0, 8) === "https://" ? data : "https://"+data);
+                res.redirect(data.length >= 8 && data.substring(0, 8) === "https://" ? data : "https://"+data);
+                return;
+            }
+        });
+        console.log("this is cacheData", cacheData);
+    
+        if(cacheData) return;
+    
+        await schema.findUrlInstanceByHash(req.params.hash).then(async data => {
+            console.log("this is data " + data);
+            if(data !== undefined && data.length > 0){
+                res.redirect(data[0].url.length >= 8 && data[0].url.substring(0, 8) === "https://" ? data[0].url : "https://"+data[0].url);
+            }
+            else{
+                res.statusCode(404);
+            }
+        });
+    })();
 });
 
 async function findValidHash(originalHash, hash, urlToLookFor, i){
