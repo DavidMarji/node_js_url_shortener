@@ -20,13 +20,26 @@ const getUrl = async function getUrl(hash){
     return data;
 }
 
-const postUrl = async function postUrl(hash, url) {
-    await client.set(hash, url);
+const getClicks = async function getClicks(url){
+    const data = await client.get(url);
+    return data;
 }
 
-const updateUrl = async function updateUrl(hash, url){
+const postUrl = async function postUrl(hash, url, clicks) {
+    await client.set(hash, url);
+    await client.set(url, clicks);
+}
+
+const updateUrl = async function updateUrl(hash, url, clicks){
+    // delete the clicks saved with the url
+    await client.del(await client.get(hash));
+    // delete the url saved with the hash
     await client.del(hash);
+
+    // save the hash and url
     await client.set(hash, url);
+    // save the url and clicks
+    await client.set(url, clicks);
 }
 
-module.exports = {postUrl, getUrl, updateUrl};
+module.exports = {postUrl, getUrl, updateUrl, getClicks};

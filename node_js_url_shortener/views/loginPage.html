@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>url inps</title>
+</head>
+
+<body id="body">
+    <label>Log In</label>
+    <div id="loginDiv">
+        <div>
+            <input type = "text" name = "username" id = "username" placeholder="Username or Password" required>
+        </div>
+        <div>
+            <input type = "text" name = "password" id = "password" placeholder="Password" required>
+        </div>
+        <div>
+            <button id="submitButton">submit</button>
+            <a href="./signUp">click here if you don't have an account</a>
+        </div>
+    </div>
+
+    <script>
+        const button = document.getElementById("submitButton");
+
+        button.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            const usernameForm = document.getElementById("username");
+            const passwordForm = document.getElementById("password");
+
+            const username = usernameForm.value;
+            const password = passwordForm.value;
+            console.log(username, password);
+
+            //post the user
+            fetch('/users/'+username+'/'+password ,{
+                method: "GET",
+            })
+            .then(res => {
+                if(res.status === 200){
+                    res.json().then(resp => {
+                        const jwt = resp;
+                        sessionStorage.setItem("userSession", jwt);
+                        window.location.href = "/urls";
+                    });
+                } 
+                else if(res.status === 404){
+                    const errorDiv = document.createElement("div");
+                    const paragraph = document.createElement("p");
+                    const node = document.createTextNode("Username or Password is invalid.");
+                    paragraph.appendChild(node);
+                    paragraph.style.color = "red";
+                    errorDiv.appendChild(paragraph);
+                    const loginDiv = document.getElementById("loginDiv");
+                    loginDiv.appendChild(errorDiv);
+                }
+                
+            })
+        });
+    </script>
+</body>
+
+</html>

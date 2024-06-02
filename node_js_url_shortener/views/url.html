@@ -9,12 +9,22 @@
 </head>
 
 <body id="body">
-    <label for="url" >Input your url</label>
-    <input type="text" name="url" id="url" required>
-    <button id="post">post</button>
-    <button id="put">put</button>
-    <input type="text" name="hash" id="hash">
+    <div>
+        <p>Enter the url here to generate a hash</p>
+        <div>
+            <input type="text" name="url" id="url" required>
+            <button id="post">post</button>
+        </div>    
+    </div>
+    <div>
+        <p>Enter the hash you want to update or a custom backhalf for the shortened url you want to create</p>
+        <div>
+            <input type="text" name="hash" id="hash">
+            <button id="put">put</button>
+        </div>
+    </div>
     <div id="toAddText"></div>
+    <div id="errorText"></div>
 
     <script>
         const postButton = document.getElementById("post");
@@ -23,28 +33,70 @@
             ev.preventDefault();
             const resultText = document.createElement("p");
             const textForm = document.getElementById("url");
+            const customForm = document.getElementById("hash");
             const inpUrl = textForm.value; 
+            const inpHash = customForm.value;
             //post the url
             fetch('/urls/', {
                 method: "POST",
-                body: JSON.stringify({ "url": inpUrl}),
+                body: JSON.stringify({
+                     "url" : inpUrl,
+                     "custom" : inpHash
+                    }),
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "authentication": jwt,
                 },
             })
             .then(function(response){
-                response.json().then(resp => {
-                    const node = document.createTextNode("use this /" + resp.hashGenerated);
-                    resultText.appendChild(node);
-                    const divFound = document.getElementById("toAddText");
-                    const newDiv = document.createElement("div");
-                    newDiv.appendChild(resultText);
-                    divFound.appendChild(newDiv);
-                })
+                const error = document.getElementById("errorText");
+                const p = document.createElement("p");
+                
+                if(response.status >= 200 && response.status < 300){
+                    response.json().then(resp => {
+                        const node = document.createTextNode("use this /" + resp.hashGenerated);
+                        resultText.appendChild(node);
+                        const divFound = document.getElementById("toAddText");
+                        const newDiv = document.createElement("div");
+                        newDiv.appendChild(resultText);
+                        divFound.appendChild(newDiv);
+                    });
+                }
+                else{
+                    switch(response.status){
+                        case(401):
+                            window.location.href = "/unauthorized";
+                            break;
+
+                        case(409):
+                            const node = document.createTextNode("the give custom backhalf " 
+                            + inpHash + " is already in use.");
+
+                            p.appendChild(node);
+                            p.style.color = "red";
+                            error.appendChild(p);
+                            break;
+
+                        case(422):
+                            const node2 = 
+                            document.createTextNode
+                            ("the custom backhalf must not contain any of the following characters\n" +
+                            ' ~,<>;\\\':"/[]^{}()=+!*@&$?%#|\n'
+                            );
+                            const error2 = document.getElementById("errorText");
+                            p.appendChild(node2);
+                            p.style.color = "red";
+                            error.appendChild(p2);
+                            break;
+                        
+                        default:
+                            window.location.href = "/unknownError"
+                    }
+                }   
             })
-            .then(function(data){
-                // resultText.innerHTML = data.body;
-            });
+            .catch(e => {
+                console.log(e);
+            })
         });
 
 
@@ -59,16 +111,19 @@
             //put the url
             fetch('/urls/'+inpHash, {
                 method: "PUT",
-                body: JSON.stringify({ "url": inpUrl}),
+                body: JSON.stringify({
+                     "url": inpUrl,
+                    }),
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "authentication": jwt,
                 },
             })
             .then(function(response){
                 const node = document.createTextNode("updated successfuly");
                 resultText.appendChild(node);
                 const body = document.getElementById("body");
-                const newDiv = document.createElement("div");
+                const newDiv= Div = document.createElement("div");
                 newDiv.appendChild(resultText);
                 body.appendChild(newDiv);
             })
@@ -80,3 +135,20 @@
 </body>
 
 </html>
+<script>
+    const jwt = sessionStorage.getItem("userSession");
+    fetch('/jwt', {
+        method : "GET",
+        headers : {
+            "authentication" : jwt
+        }
+    })
+    .then(response => {
+        const status = response.status
+
+        //redirect user back if they aren't logged in
+        if(status !== 200){
+            window.location.href = '/unauthorized';
+        }
+    });
+</script>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+    <body id="body">
+        <h1 id="username"><%= username %></h1>
+        <script>
+            const user = sessionStorage.getItem("userSession");
+            const username = document.getElementById("username").innerText;
+            fetch("/users/" + username + "/urls/view" ,{
+                method: "GET",
+                headers: 
+                {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    "authentication" : user,
+                    "username" : username
+                }
+            })
+            .then(res => {
+                    if(res.status === 200){
+                        res.text().then(response => {
+                            const urls = response.toString();
+                            const node = document.createTextNode(urls);
+                            const p = document.createElement("p");
+                            const body = document.getElementById("body");
+                            p.appendChild(node);
+                            body.appendChild(p);
+                        }); 
+                    }
+                    else if(res.status === 401){
+                        window.location.href = "/unauthorized";
+                    }
+                    else if(res.status === 404){
+                        window.location.href = "/notFound";
+                    }   
+            })
+        </script>
+    </body>
+</html>
+<script>
+
+</script>
