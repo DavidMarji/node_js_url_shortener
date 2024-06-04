@@ -15,7 +15,7 @@ const createAndSaveUrlInstance = async function createAndSaveUrlInstance(hashToS
         username: usernameToSave,
         clicks: 0
     });
-    url.save();
+    return url.save();
 }
 
 const main = async function main() {
@@ -31,7 +31,7 @@ const findUrlInstanceByHash = async function findUrlInstanceByHash(hashToLookup)
 
 // only the same user can update a url
 const updateUrlInstance = async function updateUrlInstance(hashToLookup, newUrl, inpUsername){
-    await Url.updateOne({hash : hashToLookup}, 
+    return await Url.updateOne({hash : hashToLookup}, 
         {
             hash : hashToLookup,
             url : newUrl, 
@@ -41,13 +41,9 @@ const updateUrlInstance = async function updateUrlInstance(hashToLookup, newUrl,
 }
 
 const updateUrlClicks = async function updateUrlClicks(hashToLookup){
-    try {
-        await Url.updateOne({ hash: hashToLookup }, {
-            $inc: { clicks: 1 }
-        });
-    } catch (error) {
-        console.error(`Failed to update clicks for hash ${hashToLookup}:`, error);
-    }
+    return await Url.updateOne({ hash: hashToLookup }, {
+        $inc: { clicks: 1 }
+    });
 }
 
 const findUserUrls = async function findUserUrls(usernameToLookup){

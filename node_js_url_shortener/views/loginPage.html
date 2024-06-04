@@ -40,24 +40,33 @@
                 method: "GET",
             })
             .then(res => {
-                if(res.status === 200){
+                if(res.status === 200) {
                     res.json().then(resp => {
                         const jwt = resp;
                         sessionStorage.setItem("userSession", jwt);
                         window.location.href = "/urls";
                     });
-                } 
-                else if(res.status === 404){
+                }
+                else if(res.status === 404) {
                     const errorDiv = document.createElement("div");
                     const paragraph = document.createElement("p");
-                    const node = document.createTextNode("Username or Password is invalid.");
+                    const node = document.createTextNode("user doesn't exist");
                     paragraph.appendChild(node);
                     paragraph.style.color = "red";
                     errorDiv.appendChild(paragraph);
                     const loginDiv = document.getElementById("loginDiv");
                     loginDiv.appendChild(errorDiv);
                 }
-                
+                else if(res.status === 409) { 
+                    const errorDiv = document.createElement("div");
+                    const paragraph = document.createElement("p");
+                    const node = document.createTextNode("username/email and/or password are invalid");
+                    paragraph.appendChild(node);
+                    paragraph.style.color = "red";
+                    errorDiv.appendChild(paragraph);
+                    const loginDiv = document.getElementById("loginDiv");
+                    loginDiv.appendChild(errorDiv);
+                }
             })
         });
     </script>

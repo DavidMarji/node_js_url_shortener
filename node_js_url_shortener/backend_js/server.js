@@ -1,47 +1,21 @@
 const path = require('path');
 const express = require('express');
 const router = express.Router();
-const crypto = require('crypto');
 const app = express();
-const schema = require('./urlSchema.js');
 const bodyParser = require('body-parser');
-const redis = require('./redis.js');
-const userSchema = require('./userSchema.js');
-const jwt = require('jsonwebtoken');
+const verifyAccessToken = require('./jwt/jwt.js').verifyAccessToken;
+const urlManager = require('./urls/url.js');
+const users = require("./users/manageUsers.js");
 
-const secretKey = crypto.randomUUID();
-
-function hashUrl(url) {
-	const hash = crypto.createHash('sha256');
-	hash.update(url);
-	return hash.digest('hex');
-}
-
-function generateAccessToken(usernameToSave) {
-    const payload = {
-       username : usernameToSave
-    };
-    
-    const options = { expiresIn: '1h' };
-  
-    return jwt.sign(payload, secretKey, options);
-}
-
-function verifyAccessToken(token) {
-    try {
-        const decoded = jwt.verify(token, secretKey);
-        return {success : true, data : decoded };
-    }
-    catch (error) {
-        return {success : false, error : error.message };
-    }
-}
-
-app.listen(3000);
+app.listen(3000, ()=> console.log('Listening on 3000'));
 
 app.engine('html', require('ejs').renderFile);
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+app.use('*', (error, req, res, next)=>{
+    console.log(error)
+})
 
 app.use((req, res, next) => {
     console.log(req.url, req.method);
@@ -65,78 +39,28 @@ app.get('/login', (req, res) => {
 });
 
 // sign up post request
-app.post('/users/', (req, res) => {
-    const usernameToSave = req.body.username;
-    const emailToSave = req.body.email;
-    const passwordToSave = req.body.password;
-    
-    if(usernameToSave === null || usernameToSave === undefined || usernameToSave.length === 0  
-        || usernameToSave.includes(" ")){
-        // invalid username
+app.post('/users/', async (req, res) => {
+    const signUpCode = await users.signUp(req.body.username, req.body.email, req.body.password);
+    if (signUpCode === 409) {
         res.sendStatus(409);
         return;
     }
-
-    if(emailToSave === null || emailToSave === undefined || emailToSave.length === 0 
-        || !emailToSave.includes("@")
-        || emailToSave.includes(" ")){
-        // invalid email
-        res.sendStatus(409);
-        return;
-    }
-
-    if(passwordToSave === null || passwordToSave === undefined || passwordToSave.length == 0  
-        || passwordToSave.includes(" ")){
-        // invalid password
-        res.sendStatus(409);
-        return;
-    }
-
-    //will use redis later
-    // check if user with the username or email already exists already exists
-    userSchema.findUser(usernameToSave).then(foundUserByName => {
-        if(foundUserByName !== null && foundUserByName !== undefined && foundUserByName.length > 0){
-            // user with the given username was not found
-            res.sendStatus(409);
-            return;
-        }
-
-        // now check if a user with the given email already exists
-        userSchema.findUser(emailToSave).then(foundUserByEmail => {
-            if(foundUserByEmail !== null && foundUserByEmail !== undefined && foundUserByEmail.length > 0){
-                // user with the given username was not found
-                res.sendStatus(409);
-                return;
-            }
-
-            // now we know that the data given is safe to use so create a new user
-            userSchema.signUp(usernameToSave, emailToSave, passwordToSave).then(() => {
-                // make a profile page for the user
-                const jwtReturned = generateAccessToken(req.body.username);
-                res.status(200).json(jwtReturned);
-            });
-        });
-    });
+    res.status(200).json(signUpCode);
 });
 
 // login
-app.get('/users/:username/:password', (req, res) => {
-    // I will use redis later once I figure out the basics
-    userSchema.findUser(req.params.username).then(data => {
-        if(data !== undefined && data !== null && data.length > 0){
-            // send the user as a json (username and email without password for security)
-            // I'm sending this data so that it can be stored in session storage
-            // This is temporary until I read more about JWT
-            
-            if(req.params.password === data[0].password){
-                const jwtReturned = generateAccessToken(req.params.username);
-                res.status(200).json(jwtReturned);
-                return;
-            }
-        }
+app.get('/users/:username/:password', async (req, res) => {
+    const loginCode = await users.login(req.params.username, req.params.password);
+    if (loginCode === 404) {
         res.sendStatus(404);
         return;
-    })
+    }
+    else if (loginCode === 409) {
+        res.sendStatus(409);
+        return;
+    }
+
+    res.status(200).json(loginCode);
 });
 
 app.get("/unauthorized", (req, res) => {
@@ -155,242 +79,103 @@ app.get('/unknownError', (req, res) => {
 app.get('/users/:username', (req,res) => {
     res.render(path.join(__dirname, '..', 'views', 'users', 'users.html'), {username : req.params.username});
 });
-app.get("/users/:username/urls/view", (req, res) => {
-    if(!req.params.username) {
-        res.status(401).json({"error" : "no username provided"});
+app.get("/users/:username/urls/view", async (req, res) => {
+    
+    const urls = await urlManager.getUserUrls(req.params.username, req.headers.authentication);
+    if (urls === 401){
+        res.status(401);
         return;
-    }
-    const verified = verifyAccessToken(req.headers.authentication);
-    if(!verified.success){
-        res.status(401).json({"error" : 'not logged in, unauthorized'});
-        return;
-    }
-
-    let urls = [];
-
-    schema.findUserUrls(req.params.username)
-    .then(userUrls => {
-        for(let url of userUrls){
-            urls.push({
-                "url" : url.url, 
-                "hash" : url.hash
-            });
-        }
-        console.log(urls);
-        res.status(200).send(urls);
-    })
-    .catch(error => {
-        console.log(error);
+    } 
+    else if (urls === 404){
         res.status(404);
-    });
+        return;
+    } 
+
+    // no error so send the list of urls
+    res.status(200).send(urls);
 });
 
 app.get('/urls', (req, res) => {
-
     res.sendFile(path.join(__dirname, '..', 'views', 'url.html'));
 });
 
 app.get('/jwt', (req, res) => {
     const verified = verifyAccessToken(req.headers.authentication);
     if(!verified.success){
-        res.status(401).json({"error" : 'not logged in, unauthorized'});
+        res.sendStatus(401);
         return;
     }
-    res.status(200);
+    res.sendStatus(200);
 });
 
-app.post('/urls/', (req, res) => {
-    const verified = verifyAccessToken(req.headers.authentication);
-    if(!verified.success){
-        res.status(401).json({"error" : 'not logged in, unauthorized'});
-        return;
-    }
-    
-    // if the user put a custom hash with ' ~,<>;\':"/\\[]^{}()=+!*@&$?%#|' it should not be allowed.
-    const originalHash = req.body.custom ? req.body.custom : hashUrl((req.body.url).toLowerCase());
-    const pattern = /[ ~,<>\';:"/\\[\]^{}()=+!*@&$?%#|]/;
-    if(pattern.test(originalHash)){
-        res.sendStatus(422);
-        return;
-    }
-
-    let postedHash = originalHash.length >= 5 
-                    ? originalHash.substring(0, 5) 
-                    : originalHash.substring(0, (req.body.url).length/2);
-
-    schema.findUrlInstanceByHash(postedHash).then(data => {
-        // checking if hash already exists
-        if(data !== undefined && data.length > 0){
-            // if the original hash was the custom hash
-            if(originalHash === req.body.custom){
-                res.sendStatus(409);
-                return;
-            }
-            //f ind a new valid and short hash 
-            let validHash;
-            findValidHash(originalHash, postedHash, req.body.url).then((returnedJson) => {
-                validHash = returnedJson;
-                if(!validHash.foundBefore){
-                    schema.createAndSaveUrlInstance(validHash.validHash, req.body.url, verified.data.username, 0).then(() => {});
-                }
-                redis.postUrl(validHash.validHash, req.body.url, 0)
-                    .then(() => {
-                        res.send({hashGenerated : validHash.validHash});
-                        return;
-                    });    
-            });
-            //url wasnt already stored and a new hash was found
-        }
-        else{
-            // hash is unique
-            schema.createAndSaveUrlInstance(postedHash, req.body.url, verified.data.username, 0).then(() => {});
-            redis.postUrl(postedHash, req.body.url, 0).then(() => {});
-            res.send({hashGenerated : postedHash});
-        } 
-    });
-});
-
-app.put('/urls/:hash', (req, res) => {
-    const verified = verifyAccessToken(req.headers.authentication);
-    if(!verified.success){
-        res.status(401);
-        return;
-    }
-
-    const newUrl = (req.body.url).toLowerCase();
-
-    schema.findUrlInstanceByHash(req.params.hash).then(async data => {
-        if(data[0] !== undefined && data.length> 0) {
-            schema.updateUrlInstance(req.params.hash, req.body.url, verified.data.username)
-            .then((success) => {
-            });
-
-            redis.updateUrl(req.params.hash, req.body.url, 0)
-            .then(() => {
-            });
-
-            res.sendStatus(200);
+app.post('/urls/', async (req, res) => {
+    if(req.body.custom) {
+        const statusCode = await urlManager.saveUrlWithCustomHash(req.body.custom, req.body.url, req.headers.authentication);
+        if (statusCode === 401) {
+            res.sendStatus(401);
             return;
         }
-        res.sendStatus(404);
-    });
+        else if (statusCode === 422) {
+            res.sendStatus(422);
+            return;
+        }
+        else if (statusCode === 409) {
+            res.sendStatus(409);
+            return;
+        }
+
+        res.status(200).json({"hashGenerated" : req.body.custom});
+        return;
+    }
+
+    const statusCode = await urlManager.saveUrlWithRandomHash(req.body.url, req.headers.authentication);
+    if (statusCode === 401) {
+        res.redirect('/unauthorized');
+        return;
+    }
+    else if (statusCode === 409) {
+        res.sendStatus(409);
+        return;
+    }
+
+    res.status(200).json({"hashGenerated" : statusCode});
+});
+
+app.put('/urls/:hash', async (req, res) => {
+    const urlUpdate = await urlManager.updateHash(req.params.hash, req.body.url, req.headers.authentication);
+    res.sendStatus(urlUpdate);
 });
 
 app.get('/urls/:hash', (req, res) => {
     
     const hash = req.params.hash;
-    res.render(path.join(__dirname, '..', 'views', 'urlInfo.html'), { hash : hash});
+    res.render(path.join(__dirname, '..', 'views', 'urlInfo.html'), { hash : hash });
 });
 
-app.get('/urls/:hash/info', (req, res) => {
-    console.log("inside hash info request and verifying user")
-    const verified = verifyAccessToken(req.headers.authentication);
-    console.log("this is verified", verified);
-    if(!verified.success){
-        res.status(401).json({"error" : "unauthorized"});
+app.get('/urls/:hash/info', async (req, res) => {
+    const urlJson = await urlManager.getAllUrlInfo(
+        req.params.hash,
+        req.headers.authentication
+    );
+
+    if (urlJson === 404) {
+        res.sendStatus(404);
         return;
     }
-    console.log("verified successfuly")
-    const username = verified.data.username;
-    const hash = req.params.hash;
-    console.log("this is username and hash", username, hash);
-    
-    console.log("looking in redis cache for the url")
-    redis.getUrl(hash)
-    .then(url => {
-        console.log("this was found: "+url)
-        if(url){
-            console.log("successful url, now getting clicks")
-            redis.getClicks(url)
-            .then(clicks => {
-                console.log("this was the clicks found", clicks);
-                res.status(200).json({
-                    "url" : url,
-                    "clicks" : clicks,
-                    "username" : username 
-                });
-                return;
-            });
-        }
-        else{
-            console.log("couldn't find the url in redis now looking in mongo");
-            schema.findUrlInstanceByHash(hash)
-            .then(url => {
-                console.log("this was found: "+url);
-                if(url === undefined 
-                || url === null
-                || url.length === 0){
-                    res.redirect('/notFound');
-                    return;
-                }
-                res.status(200).json({
-                    "url" : url,
-                    "clicks" : clicks,
-                    "username" : username 
-                });
-            });
-        }
-    });
-});
-
-app.get('/:hash', (req, res) => {
-
-    redis.getUrl(req.params.hash).then(async data => {
-        if(data){
-            res.redirect(data.length >= 8 && data.substring(0, 8) === "https://" ? data : "https://"+data);
-
-            redis.getClicks(data).then(async clicks => {
-                clicks = Number(clicks);
-                console.log(clicks);
-                await redis.updateUrl(req.params.hash, data, clicks + 1);
-            });
-        }
-        else{
-            schema.findUrlInstanceByHash(req.params.hash).then(async dbData => {
-                if(dbData !== undefined && dbData.length > 0){
-                    const redirectTo = dbData[0].url.length >= 8 && dbData[0].url.substring(0, 8) === "https://" ? dbData[0].url : "https://"+dbData[0].url;
-                    res.redirect(redirectTo);
-
-                    redis.getClicks(dbData[0].url).then(async clicks => {
-                        clicks = Number(clicks);
-                        await redis.postUrl(req.params.hash, dbData[0].url, clicks + 1);
-                    });
-                }
-                else{
-                    res.sendStatus(404);
-                }
-            });
-        }
-        await schema.updateUrlClicks(req.params.hash);
-    });
-});
-
-async function findValidHash(originalHash, hash, urlToLookFor, i){
-    //continuously check if the updated hash is valid until one is found
-    let temp = false;
-    let ecnounteredBefore = false;
-    while(!temp){
-        let data = await schema.findUrlInstanceByHash(hash);
-        if(5+i < originalHash.length){
-            hash = originalHash.substring(i, i+5);
-        }
-        else{
-            originalHash = hashUrl(hash);
-            i = 0;
-            hash = originalHash.substring(i, i+5);
-        }
-        if(data.length === 0){
-            // url has not been stored before and found a new valid hash
-            temp = true;
-        }
-        else if(data[0].url === urlToLookFor) {
-            // url has been stored before
-            ecnounteredBefore = true;
-            temp = true;
-        } 
-        // not found yet so get a new substring
-        else i=i+1;
-        
+    else if (urlJson === 401) {
+        res.sendStatus(401);
+        return;
     }
-    return {validHash : hash, foundBefore : ecnounteredBefore};
-}
+
+    res.status(200).json(urlJson);
+});
+
+app.get('/:hash', async (req, res) => {
+    const url = await urlManager.getUrl(req.params.hash);
+    if (url === 404) {
+        res.redirect('/notFound');
+        return;
+    }
+    res.redirect(url);
+});
+

@@ -5,6 +5,23 @@
         <script>
             const user = sessionStorage.getItem("userSession");
             const username = document.getElementById("username").innerText;
+
+            const jwt = sessionStorage.getItem("userSession");
+            fetch('/jwt', {
+                method : "GET",
+                headers : {
+                    "authentication" : jwt
+                }
+            })
+            .then(response => {
+                const status = response.status
+                console.log(status);
+                //redirect user back if they aren't logged in
+                if(status !== 200){
+                    window.location.href = '/unauthorized';
+                }
+            });
+
             fetch("/users/" + username + "/urls/view" ,{
                 method: "GET",
                 headers: 

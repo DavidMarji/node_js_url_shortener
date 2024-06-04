@@ -20,7 +20,7 @@ const signUp = async function signUp(usernameToLookup, emailToLookup, passwordTo
         email : emailToLookup,
         password : passwordToLookup,
     });
-    user.save();
+    return user.save();
 };
 
 const findUser = async function findUser(usernameToLookup){
@@ -30,7 +30,7 @@ const findUser = async function findUser(usernameToLookup){
     return userFound !== undefined && userFound.length > 0 
     ? userFound 
     : (await User.find({
-            email: usernameToLookup.toLowerCase()
+            email: usernameToLookup
         })
     );
 };

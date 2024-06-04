@@ -27,6 +27,21 @@
     <div id="errorText"></div>
 
     <script>
+        const jwt = sessionStorage.getItem("userSession");
+        fetch('/jwt', {
+            method : "GET",
+            headers : {
+                "authentication" : jwt
+            }
+        })
+        .then(response => {
+            const status = response.status;
+            //redirect user back if they aren't logged in
+            if(status !== 200){
+                window.location.href = '/unauthorized';
+            }
+        });
+
         const postButton = document.getElementById("post");
 
         postButton.addEventListener('click', (ev) => {
@@ -51,9 +66,13 @@
             .then(function(response){
                 const error = document.getElementById("errorText");
                 const p = document.createElement("p");
-                
-                if(response.status >= 200 && response.status < 300){
+
+                console.log("this is response.status: " + response.status);
+                console.log("this is response.status === 200: " + response.status === 200);
+
+                if(response.status === 200 || (response.status >200 && response.status < 300)){
                     response.json().then(resp => {
+                        console.log("inside");
                         const node = document.createTextNode("use this /" + resp.hashGenerated);
                         resultText.appendChild(node);
                         const divFound = document.getElementById("toAddText");
@@ -69,8 +88,14 @@
                             break;
 
                         case(409):
-                            const node = document.createTextNode("the give custom backhalf " 
-                            + inpHash + " is already in use.");
+                            let node;
+                            if(inpHash) {
+                                node = document.createTextNode("the give custom backhalf " 
+                                + inpHash + " is already in use.");
+                            }
+                            else {
+                                node = document.createTextNode("Invalid info");
+                            }
 
                             p.appendChild(node);
                             p.style.color = "red";
@@ -135,20 +160,3 @@
 </body>
 
 </html>
-<script>
-    const jwt = sessionStorage.getItem("userSession");
-    fetch('/jwt', {
-        method : "GET",
-        headers : {
-            "authentication" : jwt
-        }
-    })
-    .then(response => {
-        const status = response.status
-
-        //redirect user back if they aren't logged in
-        if(status !== 200){
-            window.location.href = '/unauthorized';
-        }
-    });
-</script>
