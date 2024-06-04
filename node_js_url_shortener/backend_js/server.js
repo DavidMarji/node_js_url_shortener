@@ -38,6 +38,18 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'views', 'loginPage.html'));
 });
 
+app.get("/unauthorized", (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'views', 'errors', 'unauthorized.html'));
+});
+
+app.get('/notFound', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'views', 'errors', 'notFound.html'));
+});
+
+app.get('/unknownError', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'views', 'errors', 'unknownError.html'));
+});
+
 // sign up post request
 app.post('/users/', async (req, res) => {
     const signUpCode = await users.signUp(req.body.username, req.body.email, req.body.password);
@@ -63,17 +75,22 @@ app.get('/users/:username/:password', async (req, res) => {
     res.status(200).json(loginCode);
 });
 
-app.get("/unauthorized", (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'views', 'errors', 'unauthorized.html'));
+app.get('/users/', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'views', 'users', 'viewAllUsers.html'));
 });
 
-app.get('/notFound', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'views', 'errors', 'notFound.html'));
+app.get('/users', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'views', 'users', 'viewAllUsers.html'));
 });
 
-app.get('/unknownError', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'views', 'errors', 'unknownError.html'));
-})
+app.get('/users/view', async (req, res) => {
+    const allUsers = await users.getAllUsers(req.headers.authentication);
+    if (allUsers === 400 || allUsers === 401){
+        res.sendStatus(allUsers);
+        return;
+    } 
+    res.status(200).json(allUsers);
+});
 
 // the two below are tied and the first one is basically used to force the request to include a header with the jwt that we sent so we can verify it
 app.get('/users/:username', (req,res) => {
@@ -83,19 +100,23 @@ app.get("/users/:username/urls/view", async (req, res) => {
     
     const urls = await urlManager.getUserUrls(req.params.username, req.headers.authentication);
     if (urls === 401){
-        res.status(401);
+        res.sendStatus(401);
         return;
     } 
     else if (urls === 404){
-        res.status(404);
+        res.sendStatus(404);
         return;
     } 
 
     // no error so send the list of urls
-    res.status(200).send(urls);
+    res.status(200).json(urls);
 });
 
 app.get('/urls', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'views', 'url.html'));
+});
+
+app.get('/urls/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'views', 'url.html'));
 });
 
@@ -179,3 +200,6 @@ app.get('/:hash', async (req, res) => {
     res.redirect(url);
 });
 
+app.get('*', (req, res) => {
+    res.redirect('/notFound');
+});

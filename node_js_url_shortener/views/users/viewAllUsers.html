@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+    <body id="body">
+        <h1 id="users"></h1>
+        <script>
+            const user = sessionStorage.getItem("userSession");
+            
+            fetch("/users/view" ,{
+                method: "GET",
+                headers: 
+                {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    "authentication" : user,
+                }
+            })
+            .then(res => {
+                    if(res.status === 200){
+                        res.json().then(response => {
+                            console.log(response);
+                            const users = response;
+                            const body = document.getElementById("body");
+                            const table = document.createElement("table");
+                            const rows = table.rows;
+
+                            body.appendChild(table);
+
+                            for(let userToList of users){
+                                const row = table.insertRow(rows.length);
+                                row.insertCell(0).innerHTML = userToList;
+                                row.addEventListener('click', (ev) => {
+                                    ev.preventDefault;
+                                    window.location.href = "/users/" + userToList;
+                                });
+                            }
+                        }); 
+                    }
+                    else if(res.status === 401){
+                        window.location.href = "/unauthorized";
+                    }
+                    else if(res.status === 400){
+                        window.location.href = "/unknownError";
+                    }   
+            })
+        </script>
+    </body>
+</html>

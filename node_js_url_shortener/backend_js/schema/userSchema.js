@@ -14,7 +14,7 @@ const main = async function main() {
 
 main();
 
-const signUp = async function signUp(usernameToLookup, emailToLookup, passwordToLookup){
+const signUp = async function signUp(usernameToLookup, emailToLookup, passwordToLookup) {
     const user = new User({
         username : usernameToLookup,
         email : emailToLookup,
@@ -23,7 +23,7 @@ const signUp = async function signUp(usernameToLookup, emailToLookup, passwordTo
     return user.save();
 };
 
-const findUser = async function findUser(usernameToLookup){
+const findUser = async function findUser(usernameToLookup) {
     let userFound = await User.find({
         username : usernameToLookup
     });
@@ -35,4 +35,9 @@ const findUser = async function findUser(usernameToLookup){
     );
 };
 
-module.exports = {signUp, findUser}
+const findAllUsers = async function findAllUsers() {
+    let users = await User.find({});
+    return users;
+}
+
+module.exports = {signUp, findUser, findAllUsers}

@@ -25,8 +25,7 @@ const getUserUrls = async function getUserUrls(username, accessToken) {
 
         // check if the user exists
         const user = await getUser(username);
-        if (user === null || user === undefined || user.length === 0) return 404;
-
+        if ((user === null) || (user === undefined) || (user.length === 0)) return 404;
     }
     catch (error){
         console.log(error);

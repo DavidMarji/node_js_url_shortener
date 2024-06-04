@@ -54,4 +54,25 @@ const getUser = async function getUser(username) {
     return user;
 }
 
-module.exports = {signUp, login, getUser};
+const getAllUsers = async function getAllUsers(accessToken) {
+    const verified = jwt.verifyAccessToken(accessToken);
+    if(!verified.success) {
+        return 401;
+    }
+
+    try {
+        const users = await userSchema.findAllUsers();
+        let usernames = [];
+        for(let user of users) {
+            usernames.push(user.username);
+        }
+
+        return usernames;
+    }
+    catch (error) {
+        console.log(error);
+        return 400;
+    }
+}
+
+module.exports = {signUp, login, getUser, getAllUsers};

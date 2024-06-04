@@ -67,9 +67,6 @@
                 const error = document.getElementById("errorText");
                 const p = document.createElement("p");
 
-                console.log("this is response.status: " + response.status);
-                console.log("this is response.status === 200: " + response.status === 200);
-
                 if(response.status === 200 || (response.status >200 && response.status < 300)){
                     response.json().then(resp => {
                         console.log("inside");

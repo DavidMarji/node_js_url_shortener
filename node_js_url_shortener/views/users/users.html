@@ -14,8 +14,7 @@
                 }
             })
             .then(response => {
-                const status = response.status
-                console.log(status);
+                const status = response.status;
                 //redirect user back if they aren't logged in
                 if(status !== 200){
                     window.location.href = '/unauthorized';
@@ -34,14 +33,23 @@
             })
             .then(res => {
                     if(res.status === 200){
-                        res.text().then(response => {
-                            const urls = response.toString();
-                            const node = document.createTextNode(urls);
-                            const p = document.createElement("p");
+                        res.json().then(response => {
+                            const urls = response;
                             const body = document.getElementById("body");
-                            p.appendChild(node);
-                            body.appendChild(p);
-                        }); 
+                            const table = document.createElement("table");
+                            body.appendChild(table);
+
+                            const rows = table.rows;
+                            const headerRow = table.insertRow(0);
+                            headerRow.insertCell(0).innerHTML = "User's urls";
+                            headerRow.insertCell(1).innerHTML = "Shortened code";
+
+                            for(let urlJson of urls) {
+                                const row = table.insertRow(rows.length);
+                                row.insertCell(0).innerHTML = urlJson.url;
+                                row.insertCell(1).innerHTML = urlJson.code;
+                            }
+                        });
                     }
                     else if(res.status === 401){
                         window.location.href = "/unauthorized";
@@ -53,6 +61,3 @@
         </script>
     </body>
 </html>
-<script>
-
-</script>
