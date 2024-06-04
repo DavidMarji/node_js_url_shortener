@@ -27,11 +27,11 @@
 
                             for(let userToList of users){
                                 const row = table.insertRow(rows.length);
-                                row.insertCell(0).innerHTML = userToList;
-                                row.addEventListener('click', (ev) => {
-                                    ev.preventDefault;
-                                    window.location.href = "/users/" + userToList;
-                                });
+                                const cell = row.insertCell(0);
+                                const a = document.createElement("a");
+                                cell.appendChild(a);
+                                a.innerText = userToList;
+                                a.href = '/users/'+userToList;
                             }
                         }); 
                     }

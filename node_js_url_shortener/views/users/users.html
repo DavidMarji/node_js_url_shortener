@@ -44,10 +44,14 @@
                             headerRow.insertCell(0).innerHTML = "User's urls";
                             headerRow.insertCell(1).innerHTML = "Shortened code";
 
-                            for(let urlJson of urls) {
+                            for(let urlJson of urls) { 
                                 const row = table.insertRow(rows.length);
                                 row.insertCell(0).innerHTML = urlJson.url;
-                                row.insertCell(1).innerHTML = urlJson.code;
+                                const codeCell = row.insertCell(1);
+                                const a = document.createElement("a");
+                                a.innerText = urlJson.code;
+                                a.href = '/urls/'+urlJson.code;
+                                codeCell.appendChild(a);
                             }
                         });
                     }

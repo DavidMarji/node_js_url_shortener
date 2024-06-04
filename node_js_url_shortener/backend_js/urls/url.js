@@ -147,7 +147,7 @@ const getUrl = async function getUrl(hash) {
         if (data === null || data === undefined || data.length === 0) return 404;
 
         await updateClicks(hash);
-        return data[0].url.length > 8 && data[0].url.substring(0, 9) === "https://" 
+        return data[0].url.length > 8 && data[0].url.substring(0, 8) === "https://" 
                 ? data[0].url 
                 : "https://"+data[0].url;
     }

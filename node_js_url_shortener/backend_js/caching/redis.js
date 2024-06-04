@@ -21,7 +21,7 @@ const getUrl = async function getUrl(hash){
 }
 
 const postUrl = async function postUrl(hash, url) {
-    await client.set(hash, url);
+    await client.set(hash, url, 'EX', 60 * 60 * 24);
 }
 
 const updateUrl = async function updateUrl(hash, url){
@@ -29,7 +29,7 @@ const updateUrl = async function updateUrl(hash, url){
     await client.del(hash);
 
     // save the hash and url
-    await client.set(hash, url);
+    await client.set(hash, url, 'EX', 60 * 60 * 24);
 }
 
 module.exports = {postUrl, getUrl, updateUrl};
