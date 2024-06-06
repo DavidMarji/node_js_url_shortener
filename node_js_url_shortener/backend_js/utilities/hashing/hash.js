@@ -17,11 +17,11 @@ const findValidHash = async function findValidHash(url){
     while(!temp){
         let data = await urlSchema.findUrlInstanceByHash(hash);
         
-        if(data.length === 0){
+        if(data === null || data === undefined){
             // url has not been stored before and found a new valid hash
             temp = true;
         }
-        else if(data[0].url === url) {
+        else if(data.url === url) {
             // url has been stored before
             encounteredBefore = true;
             temp = true;

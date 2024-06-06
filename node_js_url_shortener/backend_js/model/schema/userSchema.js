@@ -24,12 +24,13 @@ const signUp = async function signUp(usernameToLookup, emailToLookup, passwordTo
 };
 
 const findUser = async function findUser(usernameToLookup) {
-    let userFound = await User.find({
+    let userFound = await User.findOne({
         username : usernameToLookup
     });
-    return userFound !== undefined && userFound.length > 0 
+    console.log(userFound);
+    return userFound !== undefined && userFound !== null 
     ? userFound 
-    : (await User.find({
+    : (await User.findOne({
             email: usernameToLookup
         })
     );

@@ -28,8 +28,8 @@ const login = async function login(username, password){
 
     try {
         const user = await userSchema.findUser(username.toLowerCase());
-        if(user !== undefined && user !== null && user.length > 0){
-            if(password === user[0].password){
+        if(user !== undefined && user !== null){
+            if(password === user.password){
                 const generatedToken = jwt.generateAccessToken(username);
                 return generatedToken;
             }

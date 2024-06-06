@@ -25,7 +25,7 @@ const getUserUrls = async function getUserUrls(username, accessToken) {
 
         // check if the user exists
         const user = await getUser(username);
-        if ((user === null) || (user === undefined) || (user.length === 0)) return 404;
+        if ((user === null) || (user === undefined)) return 404;
     }
     catch (error){
         console.log(error);
@@ -123,11 +123,11 @@ const getAllUrlInfo = async function getAllUrlInfo(hash, accessToken) {
 
     try {
         const data = await urlSchema.findUrlInstanceByHash(hash);
-        if(data === null || data === undefined || data.length === 0) return 404;
+        if(data === null || data === undefined) return 404;
 
-        const username = data[0].username;
-        const clicks = data[0].clicks;
-        const url = data[0].url;
+        const username = data.username;
+        const clicks = data.clicks;
+        const url = data.url;
 
         return {
             "username" : username,
@@ -144,12 +144,12 @@ const getAllUrlInfo = async function getAllUrlInfo(hash, accessToken) {
 const getUrl = async function getUrl(hash) {
     try {
         const data = await urlSchema.findUrlInstanceByHash(hash);
-        if (data === null || data === undefined || data.length === 0) return 404;
+        if (data === null || data === undefined) return 404;
 
         await updateClicks(hash);
-        return data[0].url.length > 8 && data[0].url.substring(0, 8) === "https://" 
-                ? data[0].url 
-                : "https://"+data[0].url;
+        return data.url.length > 8 && data.url.substring(0, 8) === "https://" 
+                ? data.url 
+                : "https://"+data.url;
     }
     catch (error) {
         console.log(error);
