@@ -5,7 +5,7 @@
         <script>
             const user = sessionStorage.getItem("userSession");
             
-            fetch("/users/view" ,{
+            fetch("/home/users" ,{
                 method: "GET",
                 headers: 
                 {
@@ -31,15 +31,15 @@
                                 const a = document.createElement("a");
                                 cell.appendChild(a);
                                 a.innerText = userToList;
-                                a.href = '/users/'+userToList;
+                                a.href = '/home/users/profiles/'+userToList;
                             }
                         }); 
                     }
                     else if(res.status === 401){
-                        window.location.href = "/unauthorized";
+                        window.location.href = "/errors/unauthorized";
                     }
                     else if(res.status === 400){
-                        window.location.href = "/unknownError";
+                        window.location.href = "/errors/unknownError";
                     }   
             })
         </script>

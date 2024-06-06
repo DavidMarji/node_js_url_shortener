@@ -5,7 +5,7 @@
         <script>
             const user = sessionStorage.getItem("userSession");
             const hash = document.getElementById("hash").innerText;
-            const fetchUrl = `/urls/${hash}/info`;
+            const fetchUrl = `/home/urls/${hash}/info`;
 
             fetch(fetchUrl.toString(),{
                 method : "GET",
@@ -46,10 +46,10 @@
                     });
                 }
                 else if(res.status === 401){
-                    window.location.href = "/unauthorized";
+                    window.location.href = "/erorrs/unauthorized";
                 }
                 else{
-                    window.location.href = "/notFound";
+                    window.location.href = "/errors/notFound";
                 }
             }).catch(e => console.log(e));
         </script>

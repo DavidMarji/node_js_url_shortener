@@ -38,7 +38,7 @@
             const status = response.status;
             //redirect user back if they aren't logged in
             if(status !== 200){
-                window.location.href = '/unauthorized';
+                window.location.href = '/errors/unauthorized';
             }
         });
 
@@ -52,7 +52,7 @@
             const inpUrl = textForm.value; 
             const inpHash = customForm.value;
             //post the url
-            fetch('/urls/', {
+            fetch('/home/urls/', {
                 method: "POST",
                 body: JSON.stringify({
                      "url" : inpUrl,
@@ -81,7 +81,7 @@
                 else{
                     switch(response.status){
                         case(401):
-                            window.location.href = "/unauthorized";
+                            window.location.href = "/errors/unauthorized";
                             break;
 
                         case(409):
@@ -112,7 +112,7 @@
                             break;
                         
                         default:
-                            window.location.href = "/unknownError"
+                            window.location.href = "/errors/unknownError"
                     }
                 }   
             })
@@ -131,7 +131,7 @@
             const hashForm = document.getElementById("hash");
             const inpHash = hashForm.value;
             //put the url
-            fetch('/urls/'+inpHash, {
+            fetch('/home/urls/'+inpHash, {
                 method: "PUT",
                 body: JSON.stringify({
                      "url": inpUrl,

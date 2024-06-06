@@ -41,7 +41,7 @@
             const password = passwordForm.value;
 
             //post the user
-            fetch('/users/', {
+            fetch('/home/users', {
                 method: "POST",
                 body: JSON.stringify({
                      "username": username,
@@ -59,7 +59,7 @@
                         sessionStorage.setItem("userSession", jwt);
 
                         // redirect to urls
-                        window.location.href = '/urls';
+                        window.location.href = '/home/url-shortener';
                     });
                 }
                 else if(res.status === 409){

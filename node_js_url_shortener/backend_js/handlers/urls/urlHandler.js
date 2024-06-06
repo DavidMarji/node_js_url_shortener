@@ -1,8 +1,8 @@
-const urlSchema = require('../schema/urlSchema.js');
-const jwt = require('../jwt/jwt.js');
-const hashing = require('../hashing/hash.js');
-const redis = require('../caching/redis.js');
-const getUser = require('../users/manageUsers.js').getUser;
+const urlSchema = require('../../model/schema/urlSchema.js');
+const jwt = require('../../utilities/jwt/jwt.js');
+const hashing = require('../../utilities/hashing/hash.js');
+const redis = require('../../model/caching/redis.js');
+const getUser = require('../users/userHandler.js').getUser;
 
 function validateCustomHash(custom) {
     // if the user put a custom hash with ' ~,<>;\':"/\\[]^{}()=+!*@&$?%#|' it should not be allowed.

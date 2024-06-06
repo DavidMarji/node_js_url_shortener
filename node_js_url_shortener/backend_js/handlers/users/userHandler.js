@@ -1,11 +1,14 @@
-const userSchema = require('../schema/userSchema.js');
-const userInfoValidation = require('./userInfoValidation.js');
-const jwt = require('../jwt/jwt.js');
+const userSchema = require('../../model/schema/userSchema.js');
+const userInfoValidation = require('../../utilities/userValidation/userInfoValidation.js');
+const jwt = require('../../utilities/jwt/jwt.js');
 
 const signUp = async function signUp(username, email, password){
+
     const val = userInfoValidation.validateUserSignUp(username, email, password);
     // invalid inputs so return the error code
-    if(val !== 200) return val;
+    if(val !== 200){
+        return val;
+    }
     
     try {
         // since the model has the unique keyword there is no need to check for this as it would throw an error

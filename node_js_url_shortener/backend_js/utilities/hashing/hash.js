@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const urlSchema = require('../schema/urlSchema.js');
+const urlSchema = require('../../model/schema/urlSchema.js');
 
 function hashUrl(url) {
 	const hash = crypto.createHash('sha256');

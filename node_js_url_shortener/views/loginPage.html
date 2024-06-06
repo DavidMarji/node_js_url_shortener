@@ -33,18 +33,17 @@
 
             const username = usernameForm.value;
             const password = passwordForm.value;
-            console.log(username, password);
 
             //post the user
-            fetch('/users/'+username+'/'+password ,{
+            fetch('/home/users/'+username+'/'+password ,{
                 method: "GET",
             })
             .then(res => {
                 if(res.status === 200) {
                     res.json().then(resp => {
-                        const jwt = resp;
-                        sessionStorage.setItem("userSession", jwt);
-                        window.location.href = "/urls";
+                        sessionStorage.setItem("userSession", resp.loginCode);
+                        console.log(sessionStorage.getItem("userSession", resp.loginCode));
+                        window.location.href = "/home/url-shortener";
                     });
                 }
                 else if(res.status === 404) {

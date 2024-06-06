@@ -7,21 +7,8 @@
             const username = document.getElementById("username").innerText;
 
             const jwt = sessionStorage.getItem("userSession");
-            fetch('/jwt', {
-                method : "GET",
-                headers : {
-                    "authentication" : jwt
-                }
-            })
-            .then(response => {
-                const status = response.status;
-                //redirect user back if they aren't logged in
-                if(status !== 200){
-                    window.location.href = '/unauthorized';
-                }
-            });
 
-            fetch("/users/" + username + "/urls/view" ,{
+            fetch("/home/users/" + username + "/urls/view" ,{
                 method: "GET",
                 headers: 
                 {
@@ -50,16 +37,16 @@
                                 const codeCell = row.insertCell(1);
                                 const a = document.createElement("a");
                                 a.innerText = urlJson.code;
-                                a.href = '/urls/'+urlJson.code;
+                                a.href = '/home/urls/'+urlJson.code;
                                 codeCell.appendChild(a);
                             }
                         });
                     }
                     else if(res.status === 401){
-                        window.location.href = "/unauthorized";
+                        window.location.href = "/errors/unauthorized";
                     }
                     else if(res.status === 404){
-                        window.location.href = "/notFound";
+                        window.location.href = "/errors/notFound";
                     }   
             })
         </script>
