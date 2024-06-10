@@ -69,7 +69,6 @@
 
                 if(response.status === 200 || (response.status >200 && response.status < 300)){
                     response.json().then(resp => {
-                        console.log("inside");
                         const node = document.createTextNode("use this /" + resp.hashGenerated);
                         resultText.appendChild(node);
                         const divFound = document.getElementById("toAddText");

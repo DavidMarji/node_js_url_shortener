@@ -65,7 +65,6 @@ router.get('/:hash', async (req, res) => {
     console.log("inside get /:hash");
 
     const url = await urlManager.getUrl(req.params.hash);
-    console.log(url);
     if (url === 404) {
         res.redirect('/errors/notFound');
         return;

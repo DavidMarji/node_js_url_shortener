@@ -36,13 +36,12 @@
 
             //post the user
             fetch('/home/users/'+username+'/'+password ,{
-                method: "GET",
+                method: "POST",
             })
             .then(res => {
                 if(res.status === 200) {
                     res.json().then(resp => {
                         sessionStorage.setItem("userSession", resp.loginCode);
-                        console.log(sessionStorage.getItem("userSession", resp.loginCode));
                         window.location.href = "/home/url-shortener";
                     });
                 }

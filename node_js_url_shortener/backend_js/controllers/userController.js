@@ -5,7 +5,6 @@ const urlManager = require('../handlers/urls/urlHandler.js');
 
 router.get('/home/users', async (req, res) => {
     console.log("inside get /users/view");
-    console.log("this is the jwt in /home/users", req.headers.authentication);
 
     const allUsers = await users.getAllUsers(req.headers.authentication);
     if (allUsers === 400 || allUsers === 401){
@@ -27,7 +26,7 @@ router.post('/home/users', async (req, res) => {
 });
 
 // login
-router.get('/home/users/:username/:password', async (req, res) => {
+router.post('/home/users/:username/:password', async (req, res) => {
     console.log("inside get /users/:username/:password");
     const loginCode = await users.login(req.params.username, req.params.password);
     if (loginCode === 404) {

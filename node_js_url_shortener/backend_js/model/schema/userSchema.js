@@ -27,7 +27,6 @@ const findUser = async function findUser(usernameToLookup) {
     let userFound = await User.findOne({
         username : usernameToLookup
     });
-    console.log(userFound);
     return userFound !== undefined && userFound !== null 
     ? userFound 
     : (await User.findOne({

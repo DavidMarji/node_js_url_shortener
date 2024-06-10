@@ -1,5 +1,4 @@
 const validateUserSignUp= function validateUserSignUp(usernameToSave, emailToSave, passwordToSave) {
-    console.log(usernameToSave);
     if(usernameToSave === null || usernameToSave === undefined || usernameToSave.length === 0  || usernameToSave.includes(" ")){
         // invalid username
         return 409;

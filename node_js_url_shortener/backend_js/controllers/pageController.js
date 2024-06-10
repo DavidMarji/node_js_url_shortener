@@ -33,11 +33,11 @@ router.get('/errors/unknownError', (req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'views', 'errors', 'unknownError.html'));
 });
 
-router.get('/home/users/view-all', (req, res) => {
+router.get('/home/users/all', (req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'views', 'users', 'viewAllUsers.html'));
 });
 
-router.get('/home/users/view-all/', (req, res) => {
+router.get('/home/users/all/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'views', 'users', 'viewAllUsers.html'));
 });
 
