@@ -6,12 +6,12 @@ Note: the following instructions are all for macOS and node.js must be installed
 
 First install express.js, redis, mongoose, nodemon, jsonwebtoken, and crypto-js.
 This can be done by navigating to the node_js_url_shortener directory and then running the following commands in any order:
-npm i nodemon
-npm i express
-npm i crypto-js
-npm i mongoose --save
-npm i redis
-npm i jsonwebtoken
+1. npm i nodemon
+2. npm i express
+3. npm i crypto-js
+4. npm i mongoose --save
+5. npm i redis
+6. npm i jsonwebtoken
 
 Then if MongoDB is installed, run 'mongosh' in the terminal
 Then make a db called url_shortener by running "use url_shortener"
